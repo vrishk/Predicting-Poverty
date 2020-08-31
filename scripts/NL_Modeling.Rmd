@@ -1,0 +1,67 @@
+---
+title: "NL_Modeling"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(zeallot)
+library(boot)
+setwd("~/Research/Pioneer/Project/Predicting-Poverty/scripts/")
+```
+
+# Analysis of Night Light Data and Poverty
+
+Loading main dataframe:
+```{r}
+df <- read.csv("../processed/nl_wealth_data.csv")
+```
+
+### Simple Linear Model of all variables
+```{r}
+lm <- lm(wealth~mean + median + std + max + min, data=df)
+plot(lm)
+summary(lm)
+```
+
+Observe that the quantile plot shows severe deviation from normality and outliers. This can be potentially resolved with bootstrapping. Further, I beleive that most of the outliers correspond to cities and therefore have a much larger amount of nightlight than surrounding regions but potentially not as much wealth.
+
+Further, note that STD, MAX, MEDIAN are not significant at the $\alpha = 0.01$ level. We remove them from the model in later steps.
+
+# Simple Linear Model of only mean, median, min
+
+```{r}
+lm <- lm(wealth~mean + median + min, data=df)
+plot(lm)
+summary(lm)
+```
+
+This model seems to have a very high $r_{\text{adj}}^2$ value. However, it still shows deviations from normality and outliers.
+
+# Simple Linear Model of only mean
+
+```{r}
+lm <- lm(wealth~mean, data=df)
+plot(wealth~mean, data=df)
+abline(lm)
+plot(lm)
+summary(lm)
+```
+Here is just a plot of mean. Also, you have a chance to actually see the data and the strong correlation.
+
+# Bootstrapped Linear Model only mean
+
+```{r}
+set.seed(42)
+N <- 5000
+boot_func <- function(d, i) {
+    return(summary(lm(wealth~mean, data=d[i,]))$coeff[2])
+}
+boot_res <- boot(df, boot_func, R = N)
+hist(boot_res$t, xlab="Slopes")
+
+boot.ci(boot_res)
+```
+
+Bootstrapping gives the confidence interval for the slope. I need to investigate it more thoroughly.
