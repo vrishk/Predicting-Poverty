@@ -78,12 +78,22 @@ corrplot(de_corr$r, type = "full", order = "hclust",
 
 night <- df[c("id", "mean")]
 day <- read.csv("../processed/DHS_daytime.csv")
+im <- merge(day, night, by.x="idx", by.y="id")
 
-str()
+im = im[, !(names(df) %in% c("X"))]
 
-df <- merge(nl, dhs, by.x="id", by.y="DHSCLUST")
+colnames(im)[colnames(im) == 'mean'] <- 'MeanLuminosity'
 
-colnames(im)[colnames(im) == 'mean'] <- 'Nightlight Mean Luminosity'
+im_corrs = data.frame( coeff=integer(ncol(day)-3), corr=numeric(ncol(day)-3) )
 
+for( i in 0:(ncol(day)-4)) {
+    cat(i)
+    im_corrs$coeff[i] = i
+    im_corrs$corr[i] = cor( im[[ paste("X",i, sep="") ]], im$MeanLuminosity)
+}
 
+corr = im_corrs$corr
+coeff = im_corrs$coeff
 
+plot(coeff, corr)
+     
