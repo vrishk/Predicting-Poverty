@@ -3,6 +3,7 @@ library(Hmisc)
 library(corrplot)
 library(zeallot)
 library(boot)
+library(autothresholdr)
 
 # Reading Processed data
 setwd("~/Research/Pioneer/Project/Predicting-Poverty/scripts/")
@@ -19,6 +20,10 @@ df <- df[, !(names(df) %in% c(
 
 cat(str(df))
 
+
+# --------------------------
+
+
 # Climatic and Environmental Variables
 env <- df[c("Aridity", "Enhanced_Vegetation_Index_2010", 
      "Potential_Evapotranspiration", "Global_Human_Footprint",
@@ -34,15 +39,29 @@ env_corr <- rcorr(as.matrix(env))
 print("ENVIRONMENTAL:")
 print(env_corr)
 corrplot(env_corr$r, type = "full", order = "hclust", 
-         tl.col = "black", tl.srt = 45, p.mat = env_corr$P, sig.level = 0.01, insig = "blank")
+         tl.col = "black", tl.srt = 45, p.mat = env_corr$P, 
+         sig.level = 0.01, insig = "blank")
 
-# OBSERVATION: Aridity, Rainfall, Evapotranspiration are highly correlated, choose best variable.
+# OBSERVATION: Aridity, Rainfall, Evapotranspiration are highly correlated, 
+# choose best variable.
 
-# TODO: Plotting Aridity, Rainfall, Evapotranspiration 
+# PCA of Aridity, Rainfall, Evapotranspiration -> Humidity Score
+
+env_pca <- prcomp(env[c("Aridity", "Rainfall", "Evapotranspiration")], center = TRUE, scale = TRUE)
+
+summary(env_pca) 
+screeplot(env_pca, type = "l", npcs = 3) # First component contain ~95% of all variation
+
+env["Humidity Score"] = env_pca$x[,1]
+
+
+# --------------------------
+
 
 # Geographic/Positional Variables
 
-geo <- df[c("Proximity_to_National_Borders", "Proximity_to_Protected_Areas", "Proximity_to_Water", "Travel_Times")]
+geo <- df[c("Proximity_to_National_Borders", "Proximity_to_Protected_Areas", 
+            "Proximity_to_Water", "Travel_Times")]
 
 colnames(geo)[colnames(geo) == 'Proximity_to_National_Borders'] <- 'National Borders'
 colnames(geo)[colnames(geo) == 'Proximity_to_Protected_Areas'] <- 'Protected Areas'
@@ -55,11 +74,24 @@ print(geo_corr)
 corrplot(geo_corr$r, type = "full", order = "hclust", 
          tl.col = "black", tl.srt = 45, p.mat = geo_corr$P, sig.level = 0.01, insig = "blank")
 
-# OBSERVATION: Negative correlation with Nearest City and National Borders, Protected Areas as such regions would be much further away from cities.
+# OBSERVATION: Negative correlation with Nearest City and National Borders, 
+# Protected Areas as such regions would be much further away from cities.
 
-# TODO: Plotting Nearest City and National Borders, Protected Areas
+# PCA of Nearest City and National Borders, Protected Areas -> Location Score
 
-# Socioeconomic Variables
+geo_pca <- prcomp(geo[c("Nearest City", "Protected Areas", "National Borders")], center = TRUE, scale = TRUE)
+
+summary(geo_pca) 
+screeplot(geo_pca, type = "l", npcs = 3) # First two components contain ~83% of all variation
+
+geo["Location Score 1"] = geo_pca$x[, 1]
+geo["Location Score 2"] = geo_pca$x[, 2]
+
+
+# --------------------------
+
+
+# Demographic Variables
 
 de <- df[c("All_Population_Count_2010", "All_Population_Density_2010")]
 
@@ -70,14 +102,25 @@ de_corr <- rcorr(as.matrix(de))
 print("DEMOGRAPHIC:")
 print(de_corr)
 corrplot(de_corr$r, type = "full", order = "hclust", 
-         tl.col = "black", tl.srt = 45, p.mat = de_corr$P, sig.level = 0.01, insig = "blank")
+         tl.col = "black", tl.srt = 45, p.mat = de_corr$P, 
+         sig.level = 0.01, insig = "blank")
 
-# TODO: Clustering based on Density?
+# Clustering based on Density -> Otsu's Binarization
+
+thresh <- auto_thresh(trunc(de$Density), method = "Otsu")
+print("THRESHOLD: ")
+print(thresh)
+hist(de$Density,  breaks=30, freq = FALSE)
+abline(v=thresh,col="red")
+
+# --------------------------
+
 
 # Imaging Variables
 
 night <- df[c("id", "mean")]
 day <- read.csv("../processed/DHS_daytime.csv")
+exp_var <- read.csv("../processed/daytime_explained_variance.csv")
 im <- merge(day, night, by.x="idx", by.y="id")
 
 im = im[, !(names(df) %in% c("X"))]
@@ -87,7 +130,7 @@ colnames(im)[colnames(im) == 'mean'] <- 'MeanLuminosity'
 im_corrs = data.frame( coeff=integer(ncol(day)-3), corr=numeric(ncol(day)-3) )
 
 for( i in 0:(ncol(day)-4)) {
-    cat(i)
+    cat(i, "\n")
     im_corrs$coeff[i] = i
     im_corrs$corr[i] = cor( im[[ paste("X",i, sep="") ]], im$MeanLuminosity)
 }
@@ -96,4 +139,9 @@ corr = im_corrs$corr
 coeff = im_corrs$coeff
 
 plot(coeff, corr)
-     
+plot(PCA~X, data=exp_var)
+
+v <- cumsum(exp_var$PCA)
+plot(v)
+
+
