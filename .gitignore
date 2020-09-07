@@ -3,6 +3,9 @@
 # Python
 .ipynb_checkpoints
 
+# R
+**/.RHistory
+
 # Data
 images/
 plots/
