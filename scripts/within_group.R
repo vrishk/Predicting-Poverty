@@ -109,7 +109,7 @@ corrplot(de_corr$r, type = "full", order = "hclust",
 thresh <- auto_thresh(trunc(de$Density), method = "Otsu")
 print("THRESHOLD: ")
 print(thresh)
-hist(de$Density,  breaks=30, freq = FALSE)
+hist(de$Density,  breaks=30, xlab = "Density", ylab = "Frequency", main = "Otsu's Threshold for Density")
 abline(v=thresh,col="red")
 
 de["Pop Score"] = as.numeric(de$Density > thresh)
@@ -140,12 +140,12 @@ for( i in 0:(ncol(day)-4)) {
 corr = im_corrs$corr
 coeff = im_corrs$coeff
 
-plot(coeff, corr)
-plot(PCA~X, data=exp_var)
+plot(coeff, corr, xlab = "Coefficient", ylab = "Correlation")
+plot(PCA~X, data=exp_var, xlab = "Coefficient", ylab = "Variance")
 
 v <- cumsum(exp_var$PCA)
 print(v/max(v))
-plot(v)
+plot(v, xlab = "Coefficient", ylab = "Cumulative Variance")
 
 # First 10 for PCA
 
