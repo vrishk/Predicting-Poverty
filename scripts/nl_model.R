@@ -3,7 +3,7 @@ library(zeallot)
 library(boot)
 
 # Reading Processed data
-setwd("~/Research/Pioneer/Project/Poverty-Prediction-by-Satellite-Imagery/scripts/")
+setwd("~/Research/Pioneer/Project/Predicting-Poverty/scripts/")
 df <- read.csv("../processed/nl_wealth_data.csv")
 
 # Simple Linear Model of all variables
@@ -20,6 +20,10 @@ summary(lm)
 lm <- lm(wealth~mean, data=df)
 plot(lm)
 summary(lm)
+
+# Plot with mean
+plot(wealth~mean, data=df, xlab = "Mean Nightlight Luminosity", ylab = "Wealth")
+abline(lm)
 
 # Bootstrapped Linear Model only mean
 set.seed(42)
