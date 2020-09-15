@@ -111,7 +111,7 @@ print(rf)
 prediction <- predict(rf, test)
 names(prediction) <- NULL
 print("RF Without Nightlight: ")
-cor(prediction, test$wealth)
+cor(prediction, test$wealth)^2
 
 # All Variables
 
@@ -125,7 +125,7 @@ print(rf_n)
 prediction <- predict(rf_n, test)
 names(prediction) <- NULL
 print("RF with All Variables: ")
-cor(prediction, test$wealth)
+cor(prediction, test$wealth)^2
 
 # Low Luminosity
 
@@ -135,7 +135,7 @@ train = subset(ll, sample == TRUE)
 test  = subset(ll, sample == FALSE)
 
 rf_ll <- randomForest(
-    wealth~Mean.Luminosity + EVI + Human.Footprint + Humidity.Score +
+    wealth~EVI + Human.Footprint + Humidity.Score +
         Water.Bodies + Location.Score.1 + Location.Score.2 + Population + Density + 
         Pop.Score + X0 + X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
     data=ll
@@ -144,4 +144,4 @@ print(rf_ll)
 prediction <- predict(rf_ll, test)
 names(prediction) <- NULL
 print("RF Low Luminosity: ")
-cor(prediction, test$wealth)
+cor(prediction, test$wealth)^2
