@@ -7,6 +7,8 @@ library(autothresholdr)
 library(randomForest)
 library(caTools)
 
+set.seed(123)
+
 # Reading Processed data
 setwd("~/Research/Pioneer/Project/Predicting-Poverty/scripts/")
 df <- read.csv("../processed/all_features.csv")
@@ -76,7 +78,7 @@ hist(df$Mean.Luminosity)
 thresh <- auto_thresh(trunc(df$Mean.Luminosity), method = "Otsu")
 print("THRESHOLD: ")
 print(thresh)
-hist(df$Mean.Luminosity,  breaks=30, xlab = "Mean Luminosity", ylab = "Frequency", main = "Otsu's Threshold for ")
+hist(df$Mean.Luminosity,  breaks=30, xlab = "Mean Luminosity", ylab = "Frequency", main = "Otsu's Threshold for Luminosity")
 abline(v=thresh,col="red")
 
 ll <- df[df$Mean.Luminosity<thresh, ]
@@ -126,6 +128,25 @@ prediction <- predict(rf_n, test)
 names(prediction) <- NULL
 print("RF with All Variables: ")
 cor(prediction, test$wealth)^2
+
+
+
+# All Variables except nighlight
+
+rf <- randomForest(
+    wealth ~ EVI + Human.Footprint + Humidity.Score +
+        Water.Bodies + Location.Score.1 + Location.Score.2 + Population + Density + 
+        Pop.Score + X0 + X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+    data=train
+)
+print(rf_n)
+prediction <- predict(rf_n, test)
+names(prediction) <- NULL
+print("RF without nightlight: ")
+cor(prediction, test$wealth)^2
+
+
+
 
 # Low Luminosity
 

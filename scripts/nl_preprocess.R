@@ -6,7 +6,7 @@ library(rasterVis)
 library(zeallot)
 
 # Loading NightLight data
-setwd("~/Research/Pioneer/Project/Poverty-Prediction-by-Satellite-Imagery/scripts/")
+setwd("~/Research/Pioneer/Project/Predicting-Poverty/scripts/")
 shape <- raster("../data/nighttime_image/F182010.v4d_web.stable_lights.avg_vis.tif")
 
 # Get Cluster Section from Coordinates
@@ -33,6 +33,8 @@ for (i in 1:nrow(clusters)) {
     lat <- clusters[i, "latitude"]
     long <- clusters[i, "longitude"]
     section <- get_NL_section(lat, long)
+    
+    plot(section, col=grey(seq(0, 1, length = 256)))
     
     # NL Features Used
     df$max[i] <- cellStats(section, 'max')
